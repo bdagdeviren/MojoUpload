@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Maven-Npm Uploader</title>
+    <script type="text/javascript" src="js/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="js/index.js"></script>
+    <link href="css/index.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+    <div class="div1">
+        <div class="div2">
+            <div id="wrapper">
+                <select id="demo" name="demo">
+                    <option value="Npm">Npm</option>
+                    <option value="Raw">Raw</option>
+                    <option value="Maven">Maven</option>
+                </select>
+            </div>
+            <div>
+                <div class="upload">
+                    <div class="file-upload">
+                        <div class="file-select">
+                            <div class="file-select-button" id="fileName" style="font-size: 17px;">Choose File</div>
+                            <div class="file-select-name" id="noFile" style="font-size: 17px;">No file chosen...</div>
+                            <input type="file" name="chooseFile" id="chooseFile">
+                        </div>
+                    </div>
+                    <input onclick="send()" id="submit" type="submit">
+                    <pre id="connection"></pre>
+                    <pre id="output"></pre>
+                </div>
+                <!--
+                <div class="type">
+                        <span id="type" class="open-sans tera ls-xlarge bold">NPM</span><br>
+                </div>
+                -->
+            </div>
+            
+        </div>
+    </div>
+    <script type="text/javascript" src="js/websocket.js"></script>
+</body>
+</html>
