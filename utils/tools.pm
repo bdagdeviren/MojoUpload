@@ -29,8 +29,11 @@ sub unzip{
 sub listAllFile{
     my $ip = $_[0];
     my @files = glob("uploads/$ip/*.*");
-    #foreach my $file (@files){ push @tools::fileList , $file;  }
-    return @files;
+    my %jsonFiles=();
+    foreach my $file (@files){ 
+        push @{$jsonFiles{files}}, $file;  
+    }
+    return %jsonFiles;
 }
 
 1;
