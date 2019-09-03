@@ -5,6 +5,7 @@ use warnings;
 use 5.010;
 use autodie;
 use Archive::Zip;
+use File::Basename;
 
 use base 'Exporter';
 our @EXPORT = qw/ unzip /;
@@ -34,6 +35,31 @@ sub listAllFile{
         push @{$jsonFiles{files}}, $file;  
     }
     return %jsonFiles;
+}
+
+sub resolveArtifactInfo{
+    my $file = $_[0];
+    my $groupId = $data->{groupId};
+    if ($groupId eq '') {
+        $groupId = $data->{parent}{groupId};
+    }
+    my $artifactId = $data->{artifactId};
+    if ($artifactId eq '') {
+        $artifactId = $data->{parent}{artifactId};
+    }
+    my $version = $data->{version};
+    if ($version eq '') {
+        $version = $data->{parent}{version};
+    }
+
+    my $classifier = basename($file);
+    $classifier =~ s/$artifactId//ig;
+    $classifier =~ s/-//ig;
+    $classifier =~ s/$version//ig;
+    $classifier =~ s/.pom//ig;
+    $classifier =~ s/.jar//ig;
+
+    return $groupId,$artifactId,$version,$classifier;
 }
 
 1;

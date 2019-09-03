@@ -8,6 +8,7 @@ use LWP::UserAgent;
 use HTTP::Request::Common;
 use Mojo::Server::Daemon;
 use Mojo::File;
+use XML::Simple;
 
 plugin 'ClientIP';
 
@@ -16,7 +17,8 @@ use tools qw/ unzip /;
 
 my $ua = LWP::UserAgent->new();
 
-my $url   = 'http://192.168.1.7:8081/service/rest/v1/components?repository=deneme';
+my $urlNpm   = 'http://192.168.1.7:8081/service/rest/v1/components?repository=deneme';
+my $urlMaven   = 'http://10.150.0.247:8081/service/rest/v1/components?repository=deneme2';
 
 post '/upload' => sub {
     my $c = shift;
@@ -29,12 +31,33 @@ post '/uploadtonexus' => sub {
     my $c = shift;
     my $tx = $c->tx;
     my $file = $c->req->body_params->param('file');
-    my $request = HTTP::Request::Common::POST(
-        $url,
-        Authorization => 'Basic ' . encode_base64('admin:admin'),
-        Content_Type  => 'multipart/form-data; boundary=----WebKitFormBoundaryQPRsOenHPfgxL9GL',
-        Content       => [ file => [$file] ],
-    );
+    my $type = $c->req->body_params->param('type');
+    if($type == "npm"){
+        my $request = HTTP::Request::Common::POST(
+            $urlNpm,
+            Authorization => 'Basic ' . encode_base64('admin:admin'),
+            Content_Type  => 'multipart/form-data; boundary=----WebKitFormBoundaryQPRsOenHPfgxL9GL',
+            Content       => [ npm.asset => [$file] ],
+        );
+    }else if($type == "maven"){
+        my $extension = "pom";
+        if($file =~ m/jar/){
+            $file = $file =~ s/jar/pom/r;
+            $extension = "jar";
+        }
+        ($groupId, $artifactId, $version, $classifier) = &resolveArtifactInfo($file);
+        my $request = HTTP::Request::Common::POST(
+            $urlMaven,
+            Authorization => 'Basic ' . encode_base64('admin:admin'),
+            Content_Type  => 'multipart/form-data; boundary=----WebKitFormBoundaryQPRsOenHPfgxL9GL',
+            Content       => [  maven2.groupId => $groupId,
+                                maven2.artifactId => $artifactId,
+                                maven2.version => $version,
+                                maven2.asset1.classifier => $classifier,
+                                maven2.asset1.extension => $extension,
+                                maven2.asset1 => [$file] ],
+        );
+    }
     my $res=  $ua->request($request);
     if($res -> is_success){
         $c->render(json => { status => "Success" });
