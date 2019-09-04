@@ -6,9 +6,10 @@ use 5.010;
 use autodie;
 use Archive::Zip;
 use File::Basename;
+use XML::Simple;
 
 use base 'Exporter';
-our @EXPORT = qw/ unzip /;
+our @EXPORT = qw/ unzip resolveArtifactInfo /;
 
 
 
@@ -38,17 +39,19 @@ sub listAllFile{
 }
 
 sub resolveArtifactInfo{
-    my $file = $_[0];
+    my $pom = $_[0];
+    my $file = $_[1];
+    my $data = XMLin($pom);
     my $groupId = $data->{groupId};
-    if ($groupId eq '') {
+    if (!(defined $groupId)) {
         $groupId = $data->{parent}{groupId};
     }
     my $artifactId = $data->{artifactId};
-    if ($artifactId eq '') {
+    if (!(defined $artifactId)) {
         $artifactId = $data->{parent}{artifactId};
     }
     my $version = $data->{version};
-    if ($version eq '') {
+    if (!(defined $version)) {
         $version = $data->{parent}{version};
     }
 

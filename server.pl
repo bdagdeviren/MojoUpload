@@ -13,7 +13,7 @@ use XML::Simple;
 plugin 'ClientIP';
 
 use upload;
-use tools qw/ unzip /;
+use tools qw/ unzip resolveArtifactInfo /;
 
 my $ua = LWP::UserAgent->new();
 
@@ -32,30 +32,32 @@ post '/uploadtonexus' => sub {
     my $tx = $c->tx;
     my $file = $c->req->body_params->param('file');
     my $type = $c->req->body_params->param('type');
-    if($type == "npm"){
-        my $request = HTTP::Request::Common::POST(
+    my $request;
+    if ($type eq 'npm'){
+        $request = HTTP::Request::Common::POST(
             $urlNpm,
             Authorization => 'Basic ' . encode_base64('admin:admin'),
             Content_Type  => 'multipart/form-data; boundary=----WebKitFormBoundaryQPRsOenHPfgxL9GL',
-            Content       => [ npm.asset => [$file] ],
+            Content       => [ "npm.asset" => [$file] ],
         );
-    }else if($type == "maven"){
+    }if ($type eq 'maven'){
         my $extension = "pom";
+        my $pom = $file;
         if($file =~ m/jar/){
-            $file = $file =~ s/jar/pom/r;
+            $pom = $file =~ s/jar/pom/r;
             $extension = "jar";
         }
-        ($groupId, $artifactId, $version, $classifier) = &resolveArtifactInfo($file);
-        my $request = HTTP::Request::Common::POST(
+        my ($groupId, $artifactId, $version, $classifier) = &resolveArtifactInfo($pom);
+        $request = HTTP::Request::Common::POST(
             $urlMaven,
             Authorization => 'Basic ' . encode_base64('admin:admin'),
             Content_Type  => 'multipart/form-data; boundary=----WebKitFormBoundaryQPRsOenHPfgxL9GL',
-            Content       => [  maven2.groupId => $groupId,
-                                maven2.artifactId => $artifactId,
-                                maven2.version => $version,
-                                maven2.asset1.classifier => $classifier,
-                                maven2.asset1.extension => $extension,
-                                maven2.asset1 => [$file] ],
+            Content       => {  "maven2.groupId" => $groupId,
+                                "maven2.artifactId" => $artifactId,
+                                "maven2.version" => $version,
+                                "maven2.asset1.classifier" => $classifier,
+                                "maven2.asset1.extension" => $extension,
+                                "maven2.asset1" => [$file] },
         );
     }
     my $res=  $ua->request($request);
