@@ -47,7 +47,7 @@ post '/uploadtonexus' => sub {
             $pom = $file =~ s/jar/pom/r;
             $extension = "jar";
         }
-        my ($groupId, $artifactId, $version, $classifier) = &resolveArtifactInfo($pom);
+        my ($groupId, $artifactId, $version, $classifier) = &resolveArtifactInfo($pom,$file);
         $request = HTTP::Request::Common::POST(
             $urlMaven,
             Authorization => 'Basic ' . encode_base64('admin:admin'),

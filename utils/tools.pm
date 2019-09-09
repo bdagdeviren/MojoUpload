@@ -22,7 +22,7 @@ sub unzip{
     foreach my $member ($zip->members)
     {
         next if $member->isDirectory;
-        (my $extractName = $member->fileName) =~ s{.*/}{};
+        my $extractName = $member->fileName;
         $member->extractToFileNamed(
             "$destinationDirectory/$extractName");
     }
@@ -41,19 +41,11 @@ sub listAllFile{
 sub resolveArtifactInfo{
     my $pom = $_[0];
     my $file = $_[1];
-    my $data = XMLin($pom);
-    my $groupId = $data->{groupId};
-    if (!(defined $groupId)) {
-        $groupId = $data->{parent}{groupId};
-    }
-    my $artifactId = $data->{artifactId};
-    if (!(defined $artifactId)) {
-        $artifactId = $data->{parent}{artifactId};
-    }
-    my $version = $data->{version};
-    if (!(defined $version)) {
-        $version = $data->{parent}{version};
-    }
+
+    my @spl = split('/', $file);
+    my $len = scalar @spl;
+    my $version = @spl[$len-1];
+    my $artifactId = @spl[$len-2];
 
     my $classifier = basename($file);
     $classifier =~ s/$artifactId//ig;
@@ -61,6 +53,24 @@ sub resolveArtifactInfo{
     $classifier =~ s/$version//ig;
     $classifier =~ s/.pom//ig;
     $classifier =~ s/.jar//ig;
+
+    if(defined $classifier){
+        $pom = $pom =~ s/-$classifier//r;
+    }
+    
+    my $data = XMLin($pom);
+    my $groupId = $data->{groupId};
+    if (!(defined $groupId)) {
+        $groupId = $data->{parent}{groupId};
+    }
+    $artifactId = $data->{artifactId};
+    if (!(defined $artifactId)) {
+        $artifactId = $data->{parent}{artifactId};
+    }
+    $version = $data->{version};
+    if (!(defined $version)) {
+        $version = $data->{parent}{version};
+    }
 
     return $groupId,$artifactId,$version,$classifier;
 }
